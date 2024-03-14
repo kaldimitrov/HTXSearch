@@ -3,3 +3,4 @@ pdf2image
 flask
 pillow
 chromadb
+sentence-transformers

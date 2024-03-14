@@ -8,6 +8,7 @@ import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { grey } from "@mui/material/colors";
 import SuggestionCard from "./components/SuggestionCard";
+import InputField from "./components/InputField";
 
 const ColorModeContext = React.createContext({ toggleColorMode: () => {} });
 
@@ -18,13 +19,11 @@ function SwitchTheme() {
     <Box
       sx={{
         display: "flex",
-        width: "100%",
         alignItems: "right",
         justifyContent: "right",
         bgcolor: "background.default",
         color: "text.primary",
         borderRadius: 1,
-        p: 3,
       }}
     >
       <IconButton
@@ -33,9 +32,15 @@ function SwitchTheme() {
         color="inherit"
       >
         {theme.palette.mode === "dark" ? (
-          <Brightness7Icon />
+          <Brightness7Icon sx={{
+            color: "#FF1A16",
+            fontSize: "35px",
+          }}/>
         ) : (
-          <Brightness4Icon />
+          <Brightness4Icon sx={{
+            color: "#FF1A16",
+            fontSize: "35px",
+          }}/>
         )}
       </IconButton>
     </Box>
@@ -43,10 +48,13 @@ function SwitchTheme() {
 }
 
 function App() {
-  const [mode, setMode] = React.useState<"light" | "dark">("light");
+  const [mode, setMode] = React.useState<"light" | "dark">(
+    (localStorage.getItem("theme") as "light" | "dark") || "dark"
+  );
   const colorMode = React.useMemo(
     () => ({
       toggleColorMode: () => {
+        localStorage.setItem("theme", mode === "light" ? "dark" : "light");
         setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
       },
     }),
@@ -97,10 +105,13 @@ function App() {
           <CssBaseline />
 
           <div className="switch-theme">
+            <InputField 
+              theme={mode}
+            />
             <SwitchTheme />
           </div>
           <div className="text">
-            <p>HTXSearch</p>
+            <h1>HTXSearch</h1>
           </div>
           <div className="search-bar">
             <SearchBar input={input} updateValue={updateValue} />
@@ -108,14 +119,17 @@ function App() {
               <SuggestionCard
                 text="R0 register ESP32"
                 updateValue={updateValue}
+                theme={mode}
               />
               <SuggestionCard
                 text="STM32 information"
                 updateValue={updateValue}
+                theme={mode}
               />
               <SuggestionCard
                 text="Timers in esp32"
                 updateValue={updateValue}
+                theme={mode}
               />
             </div>
           </div>
