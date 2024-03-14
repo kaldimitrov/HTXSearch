@@ -24,7 +24,6 @@ function SwitchTheme() {
         bgcolor: "background.default",
         color: "text.primary",
         borderRadius: 1,
-        p: 3,
       }}
     >
       <IconButton
@@ -35,12 +34,12 @@ function SwitchTheme() {
         {theme.palette.mode === "dark" ? (
           <Brightness7Icon sx={{
             color: "#FF1A16",
-            fontSize: "35px"
+            fontSize: "35px",
           }}/>
         ) : (
           <Brightness4Icon sx={{
             color: "#FF1A16",
-            fontSize: "35px"
+            fontSize: "35px",
           }}/>
         )}
       </IconButton>
