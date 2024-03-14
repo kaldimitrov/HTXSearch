@@ -48,7 +48,8 @@ def get_paragraphs(pdf_name: str) -> [Paragraph]:
         if idx == 0: continue
         text_blocks_raw = page.get_text('blocks')
 
-        # each block is a tuple with some metadata so we extract only the raw content
+        # each block is a tuple with some metadata so we 
+        # extract only the raw content
         text_blocks = list(map(lambda block: block[4], text_blocks_raw))
 
         # each block could be a non-readable contents entry, which carries no meaningful data
