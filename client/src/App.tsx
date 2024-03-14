@@ -70,19 +70,19 @@ function App() {
                 divider: grey[200],
                 text: {
                   primary: grey[900],
-                  secondary: grey[800],
+                  secondary: grey[900],
                 },
               }
             : {
                 primary: grey,
-                divider: grey[700],
+                divider: grey[200],
                 background: {
                   default: grey[900],
                   paper: grey[900],
                 },
                 text: {
-                  primary: "#fff",
-                  secondary: grey[500],
+                  primary: grey[300],
+                  secondary: grey[300],
                 },
               }),
         },

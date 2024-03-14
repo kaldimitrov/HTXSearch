@@ -10,12 +10,18 @@ export default function SuggestionCard(props: {
   return (
     <>
       <Card
-        sx={{ width: 0.98 / 3, height: 1 / 4, cursor: "pointer" }}
+        sx={{ 
+          width: 0.98 / 3, 
+          height: 1 / 4, 
+          cursor: "pointer", 
+          borderRadius: 3,
+          boxShadow: 3, 
+        }}
         onClick={() => props.updateValue(props.text)}
       >
         <CardContent>
           <Typography
-            sx={{ fontSize: 15, textAlign: "start" }}
+            sx={{ fontSize: "1.25rem", textAlign: "start" }}
             color="text.secondary"
             gutterBottom
           >
