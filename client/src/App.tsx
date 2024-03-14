@@ -103,7 +103,7 @@ function App() {
             <SwitchTheme />
           </div>
           <div className="text">
-            <p>HTXSearch</p>
+            <h1>HTXSearch</h1>
           </div>
           <div className="search-bar">
             <SearchBar input={input} updateValue={updateValue} />
