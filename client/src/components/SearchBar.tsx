@@ -9,10 +9,10 @@ export default function SearchBar() {
     <>
       <Paper
         component="form"
-        sx={{ p: "2px 4px", display: "flex", alignItems: "center" }}
+        sx={{ p: "4px 4px", display: "flex", alignItems: "center" , borderRadius: 3, boxShadow: 3}}
       >
         <InputBase
-          sx={{ ml: 1, flex: 1 }}
+          sx={{ ml: 1, flex: 1, padding: 1 }}
           placeholder="Search"
           inputProps={{ "aria-label": "search" }}
         />
