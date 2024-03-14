@@ -1,13 +1,13 @@
-import React from 'react';
-import SearchBar from './components/SearchBar';
-import './App.css';
-import { ThemeProvider, createTheme, useTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { Box, IconButton } from '@mui/material';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
-import { grey } from '@mui/material/colors';
-import SuggestionCard from './components/SuggestionCard';
+import React from "react";
+import SearchBar from "./components/SearchBar";
+import "./App.css";
+import { ThemeProvider, createTheme, useTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import { Box, IconButton } from "@mui/material";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
+import { grey } from "@mui/material/colors";
+import SuggestionCard from "./components/SuggestionCard";
 
 const ColorModeContext = React.createContext({ toggleColorMode: () => {} });
 
@@ -17,41 +17,54 @@ function SwitchTheme() {
   return (
     <Box
       sx={{
-        display: 'flex',
-        width: '100%',
-        alignItems: 'right',
-        justifyContent: 'right',
-        bgcolor: 'background.default',
-        color: 'text.primary',
+        display: "flex",
+        width: "100%",
+        alignItems: "right",
+        justifyContent: "right",
+        bgcolor: "background.default",
+        color: "text.primary",
         borderRadius: 1,
         p: 3,
       }}
     >
-      <IconButton sx={{ ml: 1 }} onClick={colorMode.toggleColorMode} color="inherit">
-        {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+      <IconButton
+        sx={{ ml: 1 }}
+        onClick={colorMode.toggleColorMode}
+        color="inherit"
+      >
+        {theme.palette.mode === "dark" ? (
+          <Brightness7Icon />
+        ) : (
+          <Brightness4Icon />
+        )}
       </IconButton>
     </Box>
   );
 }
 
-
 function App() {
-  const [mode, setMode] = React.useState<'light' | 'dark'>('light');
+  const [mode, setMode] = React.useState<"light" | "dark">("light");
   const colorMode = React.useMemo(
     () => ({
       toggleColorMode: () => {
-        setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+        setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
       },
     }),
-    [],
+    []
   );
+
+  const [input, setInput] = React.useState("");
+
+  function updateValue(e: string) {
+    setInput(e);
+  }
 
   const theme = React.useMemo(
     () =>
       createTheme({
         palette: {
           mode,
-          ...(mode === 'light'
+          ...(mode === "light"
             ? {
                 primary: grey,
                 divider: grey[200],
@@ -68,36 +81,42 @@ function App() {
                   paper: grey[900],
                 },
                 text: {
-                  primary: '#fff',
+                  primary: "#fff",
                   secondary: grey[500],
                 },
               }),
         },
       }),
-    [mode],
+    [mode]
   );
 
   return (
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
-    
         <div className="body">
           <CssBaseline />
 
-          <div className='switch-theme'>
+          <div className="switch-theme">
             <SwitchTheme />
           </div>
           <div className="text">
-            <p>
-              HTXSearch
-            </p>
+            <p>HTXSearch</p>
           </div>
           <div className="search-bar">
-            <SearchBar />
+            <SearchBar input={input} updateValue={updateValue} />
             <div className="cards">
-              <SuggestionCard />
-              <SuggestionCard />
-              <SuggestionCard />
+              <SuggestionCard
+                text="R0 register ESP32"
+                updateValue={updateValue}
+              />
+              <SuggestionCard
+                text="STM32 information"
+                updateValue={updateValue}
+              />
+              <SuggestionCard
+                text="Timers in esp32"
+                updateValue={updateValue}
+              />
             </div>
           </div>
         </div>
