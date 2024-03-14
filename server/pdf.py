@@ -1,7 +1,9 @@
 import fitz
 import re
+import os
 
 PARAGRAPH_MIN_WORDS = 30
+PDF_SOURCE_DIR = './examples/'
 
 invalid_chars = re.compile('.*[\x00-\x08\x0B-\x1F].*')
 
@@ -33,6 +35,11 @@ def uppercase_coef(block: str) -> float:
     uppercase_count = sum([1 for ch in block if ch.isupper()])
     return uppercase_count / len(block)
 
+# the coefficient of non-readable to total characters 
+def non_alphanum_coef(block: str) -> float:
+    non_ascii_count = sum([1 for ch in block if not ch.isalnum()])
+    return non_ascii_count / len(block)
+
 def get_paragraphs(pdf_name: str) -> [Paragraph]:
     doc = fitz.open(pdf_name)
     
@@ -56,15 +63,22 @@ def get_paragraphs(pdf_name: str) -> [Paragraph]:
                 filter(lambda block: \
                     len(block.split('\n')) >= 2 \
                         and len(block.split(' ')) > PARAGRAPH_MIN_WORDS \
-                        and uppercase_coef(block) < 0.20, \
+                        and uppercase_coef(block) < 0.20 \
+                        and non_alphanum_coef(block) < 0.35, \
                 readable_blocks))
 
         content_blocks = list(map(lambda block: block.replace('\n', ''), content_blocks))
+
+        # format the bulletins
+        content_blocks = [re.sub('•', '\n• ', block) for block in content_blocks]
         
-        # print(len(content_blocks))
         if len(content_blocks) > 0:
             result.extend(content_blocks)
 
     return result
 
-print(*get_paragraphs('STM32F103_Datasheet.pdf'), sep='\n\n')
+
+if __name__ == '__main__':
+    for file in os.listdir(PDF_SOURCE_DIR):
+        filename = os.path.join(PDF_SOURCE_DIR, file)
+        print(*get_paragraphs(filename), sep='\n\n')
