@@ -18,8 +18,8 @@ export default function SuggestionCard(props: {
           cursor: "pointer",
           borderRadius: 3,
           boxShadow: 3,
-          transition: "background-color 0.5s",
           "&:hover": {
+            transition: "background-color 0.5s",
             backgroundColor: props.theme == "light" ? "#FFAE00" : "#FF1A16",
           },
         }}

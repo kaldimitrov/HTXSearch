@@ -8,6 +8,7 @@ import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { grey } from "@mui/material/colors";
 import SuggestionCard from "./components/SuggestionCard";
+import InputField from "./components/InputField";
 
 const ColorModeContext = React.createContext({ toggleColorMode: () => {} });
 
@@ -18,7 +19,6 @@ function SwitchTheme() {
     <Box
       sx={{
         display: "flex",
-        width: "100%",
         alignItems: "right",
         justifyContent: "right",
         bgcolor: "background.default",
@@ -33,9 +33,15 @@ function SwitchTheme() {
         color="inherit"
       >
         {theme.palette.mode === "dark" ? (
-          <Brightness7Icon />
+          <Brightness7Icon sx={{
+            color: "#FF1A16",
+            fontSize: "35px"
+          }}/>
         ) : (
-          <Brightness4Icon />
+          <Brightness4Icon sx={{
+            color: "#FF1A16",
+            fontSize: "35px"
+          }}/>
         )}
       </IconButton>
     </Box>
@@ -100,6 +106,9 @@ function App() {
           <CssBaseline />
 
           <div className="switch-theme">
+            <InputField 
+              theme={mode}
+            />
             <SwitchTheme />
           </div>
           <div className="text">
