@@ -26,9 +26,6 @@ def get_paragraphs(
         # each block is a tuple with some metadata so we extract only the raw content
         blocks = [block[4] for block in blocks]
 
-        # blocks may have invalid chars such as "^R"
-        blocks = [block for block in blocks if not invalid_chars.match(block)]
-
         # a meaningful content block is one with at least some words
         blocks = [
             block for block in blocks if len(block.split(" ")) > paragraph_min_words
