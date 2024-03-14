@@ -1,19 +1,108 @@
 import React from 'react';
 import SearchBar from './components/SearchBar';
 import './App.css';
+import { ThemeProvider, createTheme, useTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { Box, IconButton } from '@mui/material';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import { grey } from '@mui/material/colors';
+import SuggestionCard from './components/SuggestionCard';
+
+const ColorModeContext = React.createContext({ toggleColorMode: () => {} });
+
+function SwitchTheme() {
+  const theme = useTheme();
+  const colorMode = React.useContext(ColorModeContext);
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        width: '100%',
+        alignItems: 'right',
+        justifyContent: 'right',
+        bgcolor: 'background.default',
+        color: 'text.primary',
+        borderRadius: 1,
+        p: 3,
+      }}
+    >
+      <IconButton sx={{ ml: 1 }} onClick={colorMode.toggleColorMode} color="inherit">
+        {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+      </IconButton>
+    </Box>
+  );
+}
+
 
 function App() {
+  const [mode, setMode] = React.useState<'light' | 'dark'>('light');
+  const colorMode = React.useMemo(
+    () => ({
+      toggleColorMode: () => {
+        setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+      },
+    }),
+    [],
+  );
+
+  const theme = React.useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode,
+          ...(mode === 'light'
+            ? {
+                primary: grey,
+                divider: grey[200],
+                text: {
+                  primary: grey[900],
+                  secondary: grey[800],
+                },
+              }
+            : {
+                primary: grey,
+                divider: grey[700],
+                background: {
+                  default: grey[900],
+                  paper: grey[900],
+                },
+                text: {
+                  primary: '#fff',
+                  secondary: grey[500],
+                },
+              }),
+        },
+      }),
+    [mode],
+  );
+
   return (
-    <div className="body">
-      <div className="text">
-        <p>
-          HTXSearch
-        </p>
-      </div>
-      <div className="search-bar">
-        <SearchBar />
-      </div>
-    </div>
+    <ColorModeContext.Provider value={colorMode}>
+      <ThemeProvider theme={theme}>
+    
+        <div className="body">
+          <CssBaseline />
+
+          <div className='switch-theme'>
+            <SwitchTheme />
+          </div>
+          <div className="text">
+            <p>
+              HTXSearch
+            </p>
+          </div>
+          <div className="search-bar">
+            <SearchBar />
+            <div className="cards">
+              <SuggestionCard />
+              <SuggestionCard />
+              <SuggestionCard />
+            </div>
+          </div>
+        </div>
+      </ThemeProvider>
+    </ColorModeContext.Provider>
   );
 }
 
