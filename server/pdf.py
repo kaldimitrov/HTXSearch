@@ -134,20 +134,14 @@ def get_sections(pdf_name: str) -> [Section]:
     result = []
     version = Version("1")
 
+    paragraph_min_words = 35
+
     for paragraph in paragraphs:
-        # if section_title.match(paragraph):
         title = re.findall(section_title_version, paragraph)
 
-        paragraph_min_words = 5
-        if (
-            len(paragraph.split(" ")) > paragraph_min_words
-            and len(title) > 0
-            and version.compare(title[0][0])
-        ):
+        if len(title) > 0 and version.compare(title[0][0]):
             version = Version(title[0][0])
-            # print(f"TITLE: {title[0][0]}")
-            print(f"TITLE: {paragraph}")
-            if buf_title != "" and buf_body != "":
+            if buf_title != "" and len(buf_body.split(" ")) > paragraph_min_words:
                 result.append(Section(buf_title, buf_body))
             buf_title = paragraph
             buf_body = ""
@@ -165,17 +159,11 @@ mode: Union["diff", "show"] = "show"
 if __name__ == "__main__" and mode == "show":
     len_all = 0
 
-    # for file in os.listdir(PDF_SOURCE_DIR):
-    #     filename = os.path.join(PDF_SOURCE_DIR, file)
-    #     paragraphs = get_paragraphs(filename)
-    #     print(*paragraphs, sep="\n\n")
-    #     len_all += len(paragraphs)
-
     for file in os.listdir(PDF_SOURCE_DIR)[1:]:
         print(f"\nFile: {file}")
         filename = os.path.join(PDF_SOURCE_DIR, file)
         sections = get_sections(filename)
-        # print(*sections, sep="\n\n")
+        print(*sections, sep="\n\n")
         len_all += len(sections)
 
     # sections = get_sections("./examples/STM32F103_Datasheet.pdf")
