@@ -43,10 +43,13 @@ function SwitchTheme() {
 }
 
 function App() {
-  const [mode, setMode] = React.useState<"light" | "dark">("dark");
+  const [mode, setMode] = React.useState<"light" | "dark">(
+    (localStorage.getItem("theme") as "light" | "dark") || "dark"
+  );
   const colorMode = React.useMemo(
     () => ({
       toggleColorMode: () => {
+        localStorage.setItem("theme", mode === "light" ? "dark" : "light");
         setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
       },
     }),
@@ -108,14 +111,17 @@ function App() {
               <SuggestionCard
                 text="R0 register ESP32"
                 updateValue={updateValue}
+                theme={mode}
               />
               <SuggestionCard
                 text="STM32 information"
                 updateValue={updateValue}
+                theme={mode}
               />
               <SuggestionCard
                 text="Timers in esp32"
                 updateValue={updateValue}
+                theme={mode}
               />
             </div>
           </div>
