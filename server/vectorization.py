@@ -32,11 +32,16 @@ def split_sentences(text: str) -> [str]:
     return sentences
 
 
-def vectorize_sections(sections: [Section], model: SentenceTransformer) -> np.ndarray:
+def vectorize_sections(
+    sections: [Section], filename: str, model: SentenceTransformer
+) -> np.ndarray:
+    filename = re.sub(r"[-_]", " ", str(filename))
+
     encodings = []
 
     for i, it in enumerate(tqdm(sections)):
         it_sentences = sum([split_sentences(jt.text) for jt in it.body], start=[])
+        it_sentences = [f"From the file '{filename}'."] + it_sentences
         if not it_sentences:
             it_sentences = ["AAAAAAAAAAAAAAAA"]
         encodings.append(np.mean(model.encode(it_sentences), axis=0))

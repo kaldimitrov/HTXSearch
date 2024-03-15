@@ -1,5 +1,7 @@
 venv/
+chroma/
 __pycache__/
+uploads/
 
 # Logs
 logs
