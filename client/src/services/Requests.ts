@@ -27,7 +27,6 @@ export async function uploadFile(input: File) : Promise<void> {
         alert('Successfully uploaded your file');
         console.log('File uploaded successfully:', response.data);
     } catch (error) {
-        alert('Uploading file failed');
         console.error('Error uploading file:', error);
     }
 }

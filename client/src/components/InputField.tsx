@@ -22,7 +22,7 @@ export default function InputFile(props: { theme: string }) {
     if (selectedFile) {
       uploadFile(selectedFile);
     } else {
-      alert('No file selected');
+      alert('Error uploading file');
     }
   }
 
