@@ -32,15 +32,19 @@ function SwitchTheme() {
         color="inherit"
       >
         {theme.palette.mode === "dark" ? (
-          <Brightness7Icon sx={{
-            color: "#FF1A16",
-            fontSize: "35px",
-          }}/>
+          <Brightness7Icon
+            sx={{
+              color: "#FF1A16",
+              fontSize: "35px",
+            }}
+          />
         ) : (
-          <Brightness4Icon sx={{
-            color: "#FF1A16",
-            fontSize: "35px",
-          }}/>
+          <Brightness4Icon
+            sx={{
+              color: "#FF1A16",
+              fontSize: "35px",
+            }}
+          />
         )}
       </IconButton>
     </Box>
@@ -105,16 +109,16 @@ function App() {
           <CssBaseline />
 
           <div className="switch-theme">
-            <InputField 
-              theme={mode}
-            />
+            <InputField theme={mode} />
             <SwitchTheme />
           </div>
           <div className="text">
             <h1>HTXSearch</h1>
           </div>
-          <div className="search-bar">
-            <SearchBar input={input} updateValue={updateValue} />
+          <div className="main">
+            <div className="search-bar">
+              <SearchBar input={input} updateValue={updateValue} />
+            </div>
             <div className="cards">
               <SuggestionCard
                 text="R0 register ESP32"
