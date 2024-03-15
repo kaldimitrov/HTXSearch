@@ -1,3 +1,5 @@
+from typing import Dict
+
 import chromadb
 from chromadb.utils import embedding_functions
 
@@ -6,7 +8,7 @@ from tqdm import tqdm
 
 import os
 
-from pdf import get_sections, Section, PDF_SOURCE_DIR
+from pdf import get_sections, Section, PDF_SOURCE_DIR, figure_reference, get_figures
 from vectorization import vectorize_sections
 
 DB_PATH = "./chroma"
@@ -21,6 +23,7 @@ class ChromaDbInstance:
     collection: chromadb.Collection
     embed_fn: embedding_functions.SentenceTransformerEmbeddingFunction
     id_counter: int
+    file_figure_map: Dict[str, Dict[str, int]]
 
     def __init__(self) -> None:
         client = chromadb.PersistentClient(path=DB_PATH)
@@ -28,6 +31,12 @@ class ChromaDbInstance:
         self.embed_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
             model_name=SENTENCE_MODEL
         )
+
+        self.file_figure_map = {}
+
+        for file in Path(PDF_SOURCE_DIR).iterdir():
+            self.file_figure_map[file.name] = {k: v.page for k, v in get_figures(file).items()}
+
 
         try:
             self.collection = client.get_collection(
@@ -75,8 +84,27 @@ class ChromaDbInstance:
                     "file": response["metadatas"][0][i]["file"],
                 }
             )
-            result["documents"].append(response["documents"][0][i])
+
             result["count"] += 1
+
+            result["documents"].append([{"text": response["documents"][0][i], "page": None}])
+
+            while (match := figure_reference.search(result["documents"][-1][-1]["text"])) is not None:
+                text = match[1]
+
+                if text not in self.file_figure_map[response["metadatas"][0][i]["file"]]:
+                    continue
+
+                old_text = result["documents"][-1][-1]["text"]
+                result["documents"][-1].pop()
+
+                l, r = match.span(1)
+                page = self.file_figure_map[response["metadatas"][0][i]["file"]][text]
+
+                result["documents"][-1].append({"page": None, "text": old_text[:l]})
+                result["documents"][-1].append({"page": page, "text": old_text[l:r]})
+                result["documents"][-1].append({"page": None, "text": old_text[r:]})
+
 
         return result
 
@@ -85,7 +113,7 @@ def fmt_answers(db_resp) -> None:
     for i in range(db_resp["count"]):
         distance = db_resp["distances"][i]
         title = db_resp["metadatas"][i]["title"]
-        body = db_resp["documents"][i]
+        body = ''.join(f'[{it["page"]}]{it["text"]}' for it in db_resp["documents"][i])
         file = db_resp["metadatas"][i]["file"]
         print(f"[{distance}] {title}\n")
         print(f"{body}")

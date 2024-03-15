@@ -5,15 +5,19 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from pypdf import PdfReader, PdfWriter
-from typing import Tuple, Set
+from typing import Set, Dict
+
+from pprint import pprint
 
 PDF_SOURCE_DIR = "./examples/"
 PDF_IMG_OUT_DIR = "./cropped/"
 
-contents_entry = re.compile(r"^\d.*\d$")
+contents_entry = re.compile(r"(^\d.*\d$)|(\.\s+\.)")
 toc_section = re.compile(r"^\d+(\.\d+)* .*")
 non_bulletin_dot = re.compile(r"[^\n]+•.*")
 
+figure_title = re.compile(r"((Figure|Table) [^ ]*\d)[\:\.]")
+figure_reference = re.compile(r"((Figure|Table) [^ ]*\d)[^ \d]")
 
 # the coefficient between lowercase characters and the total characters
 def lowercase_coef(block: str) -> float:
@@ -29,6 +33,7 @@ class Block:
     x1: float
     y1: float
     page: int
+    font_height: float
 
 
 # NOTE: returns None if the ToC does not exist
@@ -63,6 +68,8 @@ def get_blocks(pdf_name: str) -> [Block]:
             if block_type != 0:
                 continue
 
+            line_count = text.count('\n')
+
             text = re.sub(r"\s+", " ", text).strip()
             text = re.sub("^•", "\n• ", text)
 
@@ -73,6 +80,7 @@ def get_blocks(pdf_name: str) -> [Block]:
                 x1=x1 / page_w,
                 y1=y1 / page_h,
                 page=page_idx + 1,
+                font_height=line_count/(y1-y0),
             )
 
             ret.append(block)
@@ -133,6 +141,29 @@ def get_sections(pdf_name: str) -> [Section]:
     return ret
 
 
+def get_figures(file: str) -> Dict[str, Block]:
+    toc = get_toc(file)
+    blocks = [block for block in get_blocks(file) if is_paragraph(block, toc)]
+
+    figure_map = {}
+
+    for block in blocks:
+        match = figure_title.match(block.text)
+        if match is None:
+            continue
+        match = match[1]
+
+        if match not in figure_map or figure_map[match].font_height < block.font_height:
+            figure_map[match] = block
+
+    return figure_map
+
+
+if __name__ == "__main__":
+    for file in Path(PDF_SOURCE_DIR).iterdir():
+        pprint(get_figures(file))
+
+"""
 if __name__ == "__main__":
     len_all = 0
 
@@ -143,3 +174,4 @@ if __name__ == "__main__":
         print(f"\nFile: {file}; sections: {len(sections)}")
         print(*[it.title.text for it in sections], sep="\n")
     print(f"Loaded {len_all} sections")
+"""
