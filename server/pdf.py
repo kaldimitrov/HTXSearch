@@ -9,8 +9,8 @@ from typing import Tuple
 PDF_SOURCE_DIR = "./examples/"
 
 contents_entry = re.compile(r"^\d.*\d$")
-section_title = re.compile(r"^\d(\.(\d|[a-z])+)* ")
-section_title_version = re.compile(r"^(\d+(\.(\d|[a-z])+)*) ")
+section_title = re.compile(r"^[1-9][0-9]*(\.(\d|[a-z])+)*\.? ")
+section_version = re.compile(r"^([1-9][0-9]*(\.(\d|[a-z])+)*)\.? ")
 non_bulletin_dot = re.compile(r"[^\n]+•.*")
 
 
@@ -36,8 +36,10 @@ def get_blocks(pdf_name: str) -> [Block]:
     ret = []
 
     for page_idx, page in enumerate(doc):
-        assert(page.rect.x0 == 0)
-        assert(page.rect.y0 == 0)
+        if page_idx == 0:
+            continue
+        assert page.rect.x0 == 0
+        assert page.rect.y0 == 0
 
         page_w = page.rect.x1
         page_h = page.rect.y1
@@ -47,15 +49,17 @@ def get_blocks(pdf_name: str) -> [Block]:
                 continue
 
             text = text.replace("\n", "")
-            re.sub("^•", "\n• ", text)
+            text = re.sub("^•", "\n• ", text)
+            # sometimes the section versions are together like: '3.1.CPU ...'
+            text = re.sub(r"(\d\.?)([A-Za-z])", r"\1 \2", text)
 
-            block=Block(
+            block = Block(
                 text=text,
-                x0=x0/page_w,
-                y0=y0/page_h,
-                x1=x1/page_w,
-                y1=y1/page_h,
-                page=page_idx+1,
+                x0=x0 / page_w,
+                y0=y0 / page_h,
+                x1=x1 / page_w,
+                y1=y1 / page_h,
+                page=page_idx + 1,
             )
 
             ret.append(block)
@@ -64,11 +68,17 @@ def get_blocks(pdf_name: str) -> [Block]:
 
 
 def is_paragraph(block: Block, min_lowercase_coef=0.5) -> bool:
-    if block.y0 < 0.1 or block.y1 > 0.9: return False
-    if contents_entry.match(block.text): return False
-    if non_bulletin_dot.match(block.text): return False
-    if len(block.text.split()) < 3: return False
-    return lowercase_coef(block.text) > min_lowercase_coef or section_title.match(block.text)
+    if block.y0 < 0.1 or block.y1 > 0.9:
+        return False
+    if contents_entry.match(block.text):
+        return False
+    if non_bulletin_dot.match(block.text):
+        return False
+    if len(block.text.split()) < 2:
+        return False
+    return lowercase_coef(block.text) > min_lowercase_coef or section_title.match(
+        block.text
+    )
 
 
 @dataclass
@@ -77,7 +87,7 @@ class Section:
     body: [Block]
 
     def __repr__(self) -> str:
-        body_text = '\n'.join(it.text for it in self.body)
+        body_text = "\n".join(it.text for it in self.body)
         return f"{self.title.text}\n{body_text}\n\n"
 
 
@@ -103,10 +113,10 @@ def is_version_successor(prev: Tuple[str], next: Tuple[str]) -> bool:
 # the paragrpahs should be filtered externaly
 def get_sections(paragraphs: [Block]) -> [Section]:
     ret = []
-    version = "1",
+    version = ("1",)
 
     for paragraph in paragraphs:
-        next_version = section_title_version.match(paragraph.text)
+        next_version = section_version.match(paragraph.text)
 
         if next_version is not None:
             next_version = next_version[1].split(".")
@@ -120,6 +130,8 @@ def get_sections(paragraphs: [Block]) -> [Section]:
 
         ret.append(Section(title=paragraph, body=[]))
 
+    ret = [r for r in ret if r.body]
+
     return ret
 
 
@@ -127,11 +139,12 @@ if __name__ == "__main__":
     len_all = 0
 
     for file in Path(PDF_SOURCE_DIR).iterdir():
-        print(f"\nFile: {file}")
-
-        sections = get_sections([block for block in get_blocks(file) if is_paragraph(block) and block.page > 1])
-        # print(*sections, sep="\n\n")
-        print("FIRST: ", sections[0])
+        sections = get_sections(
+            [
+                block
+                for block in get_blocks(file)
+                if is_paragraph(block) and block.page > 1
+            ]
+        )
         len_all += len(sections)
-
-    print(len_all)
+    print(f"Loaded {len_all} sections")
