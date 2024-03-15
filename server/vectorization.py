@@ -45,7 +45,6 @@ def vectorize_sections(sections: [Section]) -> Tuple[np.ndarray, np.ndarray]:
 
     return np.array(encodings)
 
-
 if __name__ == '__main__':
     file = next(Path(PDF_SOURCE_DIR).iterdir())
 

@@ -28,7 +28,7 @@ export default function SearchBar(props: { updateValue: any; input: string }) {
             }
           }}
           onInput={(e: any) => {
-            props.updateValue(e.target.data);
+            props.updateValue(e.target.value);
           }}
           inputProps={{ "aria-label": "search" }}
         />
