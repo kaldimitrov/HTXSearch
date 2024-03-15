@@ -61,10 +61,10 @@ def get_blocks(pdf_name: str) -> [Block]:
             if block_type != 0:
                 continue
 
-            text = text.replace("\n", " ").strip()
+            text = re.sub(r"\s+", " ", text).strip()
             text = re.sub("^•", "\n• ", text)
             # sometimes the section versions are together like: '3.1.CPU ...'
-            text = re.sub(r"(\d\.?)([A-Za-z])", r"\1 \2", text)
+            # text = re.sub(r"(\d\.?)([A-Za-z])", r"\1 \2", text)
 
             block = Block(
                 text=text,
@@ -134,5 +134,6 @@ if __name__ == "__main__":
         sections = get_sections(file)
         len_all += len(sections)
 
+        print(f"\nFile: {file}; sections: {len(sections)}")
         print(*[it.title.text for it in sections], sep="\n")
     print(f"Loaded {len_all} sections")

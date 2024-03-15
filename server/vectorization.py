@@ -8,25 +8,27 @@ from tqdm import tqdm
 
 from pdf import get_sections, PDF_SOURCE_DIR, Section
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
-#model = SentenceTransformer("all-mpnet-base-v2")
+# model = SentenceTransformer("all-MiniLM-L6-v2")
+model = SentenceTransformer("all-MiniLM-L12-v2")
+# model = SentenceTransformer("all-mpnet-base-v2")
+
 
 def split_sentences(text: str) -> [str]:
-    sentence_border = re.compile('(\.\s+[A-Z])')
+    sentence_border = re.compile(r"(\.\s+[A-Z])")
 
     split = sentence_border.split(text)
 
-    for i in range(1, len(split)-1):
+    for i in range(1, len(split) - 1):
         if sentence_border.fullmatch(split[i]):
-            split[i-1] = split[i-1] + split[i][0]
-            split[i+1] = split[i][-1] + split[i+1]
+            split[i - 1] = split[i - 1] + split[i][0]
+            split[i + 1] = split[i][-1] + split[i + 1]
 
     split = [it for it in split if not sentence_border.fullmatch(it)]
 
     sentences = []
 
     for it in split:
-        if len(sentences) > 0 and sentences[-1].endswith(('e.g.', 'i.e.')):
+        if len(sentences) > 0 and sentences[-1].endswith(("e.g.", "i.e.")):
             sentences[-1] += it
         else:
             sentences.append(it)
@@ -45,7 +47,8 @@ def vectorize_sections(sections: [Section]) -> Tuple[np.ndarray, np.ndarray]:
 
     return np.array(encodings)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     file = next(Path(PDF_SOURCE_DIR).iterdir())
 
     sections = np.array(get_sections(file))
@@ -60,4 +63,7 @@ if __name__ == '__main__':
 
         top = np.flip(np.argsort(similarity))[0]
 
-        print(similarity[top], sections[top])
+        if similarity[top] < 0.4:
+            print("Could not find a relevant match in the text.")
+        else:
+            print(similarity[top], sections[top])
