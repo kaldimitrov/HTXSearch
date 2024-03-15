@@ -58,11 +58,11 @@ def get_blocks(pdf_name: str) -> [Block]:
         page_w = page.rect.x1
         page_h = page.rect.y1
 
-        for x0, y0, x1, y1, text, _, type in page.get_text("blocks"):
-            if type != 0:
+        for x0, y0, x1, y1, text, _, block_type in page.get_text("blocks"):
+            if block_type != 0:
                 continue
 
-            text = text.replace("\n", "")
+            text = text.replace("\n", " ").strip()
             text = re.sub("^•", "\n• ", text)
             # sometimes the section versions are together like: '3.1.CPU ...'
             text = re.sub(r"(\d\.?)([A-Za-z])", r"\1 \2", text)
@@ -109,38 +109,6 @@ class Section:
         return f"{self.title.text}\n{body_text}\n\n"
 
 
-def is_version_successor(prev: Tuple[str], next: Tuple[str]) -> bool:
-    for p, n in zip(prev, next):
-        diff = None
-
-        if p.isalpha() and n.isalpha():
-            diff = ord(n) - ord(p)
-
-        if p.isdigit() and n.isdigit():
-            diff = int(n) - int(p)
-
-        if diff is None:
-            return False
-
-        if diff < -1 or diff > 2:
-            return False
-
-    return True
-
-
-# a fallback checker if no table of contents are provided
-def is_toc_fallback(paragraph: Block, version: tuple[str]) -> bool:
-    next_version = section_version.match(paragraph.text)
-
-    if next_version is not None:
-        next_version = next_version[1].split(".")
-
-    if next_version is None or not is_version_successor(version, next_version):
-        return False
-
-    return True
-
-
 def get_sections(pdf_name: str) -> [Section]:
     blocks = get_blocks(pdf_name)
     toc = get_toc(pdf_name)
@@ -151,18 +119,10 @@ def get_sections(pdf_name: str) -> [Section]:
     version = ("1",)
 
     for paragraph in paragraphs:
-        if toc is not None:
-            if paragraph.text in toc:
-                ret.append(Section(title=paragraph, body=[]))
-                continue
-
-            if ret:
-                ret[-1].body.append(paragraph)
-
-        # if no Table of Contents is provided
-        if is_toc_fallback(paragraph, version):
+        if paragraph.text in toc:
             ret.append(Section(title=paragraph, body=[]))
             continue
+
         if ret:
             ret[-1].body.append(paragraph)
 
@@ -177,5 +137,7 @@ if __name__ == "__main__":
     for file in Path(PDF_SOURCE_DIR).iterdir():
         sections = get_sections(file)
         len_all += len(sections)
-        print(*sections, sep="\n\n")
+        # print(*sections, sep="\n\n")
+
+        print(*[it.title.text for it in sections], sep="\n")
     print(f"Loaded {len_all} sections")

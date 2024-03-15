@@ -1,16 +1,19 @@
+from typing import Tuple
+
 from sentence_transformers import SentenceTransformer, util
 from pathlib import Path
 import re
+import numpy as np
 
-from pdf import get_paragraphs, PDF_SOURCE_DIR
+from pdf import get_sections, PDF_SOURCE_DIR, Section
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 #model = SentenceTransformer("all-mpnet-base-v2")
 
-def get_sentences_from_paragraph(paragraph: str) -> [str]:
+def split_sentences(text: str) -> [str]:
     sentence_border = re.compile('(\.\s+[A-Z])')
 
-    split = sentence_border.split(paragraph)
+    split = sentence_border.split(text)
 
     for i in range(1, len(split)-1):
         if sentence_border.fullmatch(split[i]):
@@ -29,31 +32,41 @@ def get_sentences_from_paragraph(paragraph: str) -> [str]:
 
     return sentences
 
-if __name__ == '__main__':
-    question = 'How are interrupts trigerred?'
-    question_enc = model.encode(question)
 
-    file = next(Path(PDF_SOURCE_DIR).iterdir())
+def vectorize_sections(sections: [Section]) -> Tuple[np.ndarray, np.ndarray]:
+    # sections = sections[:40]
 
-    paragraphs = get_paragraphs(str(file))
-    sentences_grouped_by_paragraphs = [get_sentences_from_paragraph(paragraph) for paragraph in paragraphs]
+    sentences = []
+    section_idxs = []
 
-    paragraph_from_sentence = [par_idx for par_idx, sentences_in_paragraph in enumerate(sentences_grouped_by_paragraphs) for _ in sentences_in_paragraph]
-    sentences = [sentence for sentences_in_paragraph in sentences_grouped_by_paragraphs for sentence in sentences_in_paragraph]
+    for i, it in enumerate(sections):
+        it_sentences = sum([split_sentences(jt.text) for jt in it.body], start=[])
+
+        sentences.extend(it_sentences)
+        section_idxs.extend([i] * len(it_sentences))
 
     encodings = model.encode(sentences)
 
-    top = sorted([(it, i) for i, it in enumerate(util.cos_sim(encodings, question_enc))], reverse=True)[:10]
+    return encodings, np.array(section_idxs)
 
-    print(f'Question is: {question}')
 
-    print()
+if __name__ == '__main__':
+    file = next(Path(PDF_SOURCE_DIR).iterdir())
 
-    print('Top 10 sentences:')
-    for it, i in top:
-        print(it, sentences[i])
+    sections = np.array(get_sections(file))
 
-    print()
+    encodings, section_idx = vectorize_sections(sections)
 
-    print('Best sentence paragraph:')
-    print(paragraphs[paragraph_from_sentence[top[0][1]]])
+    while True:
+        question = input("Question: ")
+        question_enc = model.encode(question)
+
+        similarity = util.cos_sim(encodings, question_enc).numpy().squeeze(axis=1)
+
+        top = np.flip(np.argsort(similarity))[0]
+
+        print(similarity[top], sections[section_idx[top]])
+
+    print(encodings.shape, len(section_idx))
+
+#util.cos_sim
