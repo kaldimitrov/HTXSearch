@@ -8,23 +8,15 @@ PDF_SOURCE_DIR = "./examples/"
 contents_entry = re.compile(r"^\d.*\d$")
 section_title = re.compile(r"^\d(\.(\d|[a-z])+)* ")
 section_title_version = re.compile(r"^(\d+(\.(\d|[a-z])+)*) ")
+non_bulletin_dot = re.compile(r"[^\n]+•.*")
 
 
 class Version:
-    # '2.4.3' or '1.4.a'
+    # for example: '2.4.3' or '1.4.a'
     raw: str
 
     def __init__(self, raw: str) -> None:
         self.raw = raw
-
-    def increment(self) -> "Version":
-        versions = self.raw.split(".")[::-1]
-        if versions[0].isalpha():
-            versions[0] = chr(ord(versions[0]) + 1)
-        else:
-            versions[0] = str(int(versions[0]) + 1)
-        self.raw = ".".join(versions[::-1])
-        return self
 
     def __repr__(self) -> str:
         return self.raw
@@ -62,7 +54,7 @@ def lowercase_coef(block: str) -> float:
 
 
 def get_paragraphs(
-    pdf_name: str, min_lowercase_coef=0.50, paragraph_min_words=30
+    pdf_name: str, min_lowercase_coef=0.60, paragraph_min_words=30
 ) -> [str]:
     doc = fitz.open(pdf_name)
 
@@ -86,11 +78,6 @@ def get_paragraphs(
         # each block is a tuple with some metadata so we extract only the raw content
         blocks = [block[4] for block in blocks if block[1] > wlb and block[1] < whb]
 
-        # a meaningful content block is one with at least some words
-        # blocks = [
-        #     block for block in blocks if len(block.split(" ")) > paragraph_min_words
-        # ]
-
         # a meaningful content block has a lot of lowercase letters
         blocks = [
             block
@@ -100,8 +87,11 @@ def get_paragraphs(
 
         blocks = [block.replace("\n", "") for block in blocks]
 
-        # blocks may have invalid chars such as "^R"
-        blocks = [block for block in blocks if not contents_entry.match(block)]
+        blocks = [
+            block
+            for block in blocks
+            if not contents_entry.match(block) and not non_bulletin_dot.match(block)
+        ]
 
         # format the bulletins
         blocks = [re.sub("•", "\n• ", block) for block in blocks]
@@ -117,6 +107,7 @@ class Section:
     body: str
 
     def __init__(self, title: str, body: str) -> None:
+        title.replace("\n", "")
         self.title = title
         self.body = body
 
@@ -168,7 +159,7 @@ if __name__ == "__main__" and mode == "show":
 
     # sections = get_sections("./examples/STM32F103_Datasheet.pdf")
     # print(*sections, sep="\n\n")
-    # print("all are", len(sections))
+    print("all are", len(sections))
 
 if __name__ == "__main__" and mode == "diff":
     len_all = 0
@@ -184,10 +175,3 @@ if __name__ == "__main__" and mode == "diff":
         len_all += len(paragraphs)
 
     print(len_all, "more")
-
-ver = Version("2.a")
-ver.increment()
-print(ver.compare("2.c"))
-print(ver.compare("2.2"))
-
-print(re.findall(section_title_version, "2ajajajaj"))
