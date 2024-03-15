@@ -4,3 +4,4 @@ flask
 pillow
 chromadb
 sentence-transformers
+flask-cors
