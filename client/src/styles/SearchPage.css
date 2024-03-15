@@ -1,0 +1,45 @@
+.body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    flex-direction: column;
+    margin: auto;
+}
+  
+.text {
+    height: 30%;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: bolder;
+    background: #FFAE00;
+    background: repeating-linear-gradient(to right, #FFAE00 0%, #FF1A16 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: end;
+}
+
+.main {
+    height: 90%;
+    width: 50%;
+    justify-content: start;
+}
+
+.switch-theme {
+    height: 10%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+}
+
+.search-bar {
+    justify-content: baseline;
+    margin-bottom: 1rem;
+}
+
+.result {
+    text-align: left;
+}
