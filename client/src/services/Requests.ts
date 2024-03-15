@@ -9,7 +9,6 @@ export async function fetchInformation(input: string): Promise<string> {
 }
 
 export async function uploadFile(input: File): Promise<void> {
-  try {
     const formData = new FormData();
     formData.append("file", input);
 
@@ -23,9 +22,5 @@ export async function uploadFile(input: File): Promise<void> {
       }
     );
 
-    alert("Successfully uploaded your file");
     console.log("File uploaded successfully:", response.data);
-  } catch (error) {
-    console.error("Error uploading file:", error);
-  }
 }
