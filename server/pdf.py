@@ -8,6 +8,7 @@ from pypdf import PdfReader, PdfWriter
 from typing import Tuple, Set
 
 PDF_SOURCE_DIR = "./examples/"
+PDF_IMG_OUT_DIR = "./cropped/"
 
 contents_entry = re.compile(r"^\d.*\d$")
 toc_section = re.compile(r"^\d+(\.\d+)* .*")
@@ -127,29 +128,35 @@ def get_sections(pdf_name: str) -> [Section]:
 
     return ret
 
-def get_images(file):
 
-    reader = PdfReader(file)  
-
-    doc = fitz.open(file)
-    toc = doc.get_toc()
-    if len(toc) == 0:
-        return None
-    for i in range(len(toc) - 1):
-        if "Table" in toc[i][1]:
-            output = PdfWriter()
-            output.add_page(reader.pages[int(toc[i][2]) - 1])
-            os.makedirs((str(file).split(".")[0]).split("/")[1], exist_ok=True)
-            with open((str(file).split(".")[0]).split("/")[1] + "/" + (str(file).split(".")[0]).split("/")[1] + "%s_tables " % str(toc[i][2]) + str(toc[i][1]).split(" ")[1] + ".pdf", "wb") as outputStream:
-                output.write(outputStream)
-                
-        if "Figure" in toc[i][1]:
-            output = PdfWriter()
-            output.add_page(reader.pages[int(toc[i][2]) - 1])
-            os.makedirs((str(file).split(".")[0]).split("/")[1], exist_ok=True)
-            with open((str(file).split(".")[0]).split("/")[1] + "/" + (str(file).split(".")[0]).split("/")[1] + "%s_figures " % str(toc[i][2]) + str(toc[i][1]).split(" ")[1] + ".pdf", "wb") as outputStream:
-                output.write(outputStream)
-    
+# def get_images(pdf_name: str) -> None:
+#     file = Path(pdf_name)
+#
+#     name = file.stem
+#
+#     (Path(PDF_IMG_OUT_DIR).joinpath(name)).mkdir(parents=True, exist_ok=True)
+#
+#     reader = PdfReader(file)
+#     toc = fitz.open(file).get_toc()
+#
+#     # [<idx>, "entry name", <page>]
+#     for entry in toc:
+#
+#         output = PdfWriter()
+#         output.add_page(reader.pages[entry[2] - 1])
+#
+#         # os.makedirs((str(file).split(".")[0]).split("/")[1], exist_ok=True)
+#
+#         with open(
+#             (str(file).split(".")[0]).split("/")[1]
+#             + "/"
+#             + (str(file).split(".")[0]).split("/")[1]
+#             + "%s_tables " % str(toc[i][2])
+#             + str(toc[i][1]).split(" ")[1]
+#             + ".pdf",
+#             "wb",
+#         ) as outputStream:
+#             output.write(outputStream)
 
 if __name__ == "__main__":
     len_all = 0

@@ -8,10 +8,6 @@ from tqdm import tqdm
 
 from pdf import get_sections, PDF_SOURCE_DIR, Section
 
-# model = SentenceTransformer("all-MiniLM-L6-v2")
-model = SentenceTransformer("all-MiniLM-L12-v2")
-# model = SentenceTransformer("all-mpnet-base-v2")
-
 
 def split_sentences(text: str) -> [str]:
     sentence_border = re.compile(r"(\.\s+[A-Z])")
@@ -36,7 +32,7 @@ def split_sentences(text: str) -> [str]:
     return sentences
 
 
-def vectorize_sections(sections: [Section]) -> Tuple[np.ndarray, np.ndarray]:
+def vectorize_sections(sections: [Section], model: SentenceTransformer) -> np.ndarray:
     encodings = []
 
     for i, it in enumerate(tqdm(sections)):
