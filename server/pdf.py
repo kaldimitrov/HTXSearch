@@ -1,7 +1,7 @@
 import fitz
 import re
-from typing import Union
 import os
+from dataclasses import dataclass
 
 PDF_SOURCE_DIR = "./examples/"
 
@@ -12,65 +12,59 @@ def lowercase_coef(block: str) -> float:
     return lowercase_count / len(block)
 
 
-def get_paragraphs(
-    pdf_name: str, min_lowercase_coef=0.5, paragraph_min_words=30
-) -> [str]:
+@dataclass
+class Block:
+    text: str
+    x0: float
+    y0: float
+    x1: float
+    y1: float
+    page: int
+
+
+def get_blocks(pdf_name: str) -> [Block]:
     doc = fitz.open(pdf_name)
 
-    result = []
-    for idx, page in enumerate(doc):
-        if idx == 0:
-            continue
-        blocks = page.get_text("blocks")
+    ret = []
 
-        # each block is a tuple with some metadata so we extract only the raw content
-        blocks = [block[4] for block in blocks]
+    for page_idx, page in enumerate(doc):
+        assert(page.rect.x0 == 0)
+        assert(page.rect.y0 == 0)
 
-        # a meaningful content block is one with at least some words
-        blocks = [
-            block for block in blocks if len(block.split(" ")) > paragraph_min_words
-        ]
+        page_w = page.rect.x1
+        page_h = page.rect.y1
 
-        # a meaningful content block has a lot of lowercase letters
-        blocks = [
-            block for block in blocks if lowercase_coef(block) > min_lowercase_coef
-        ]
+        for x0, y0, x1, y1, text, _, type in page.get_text("blocks"):
+            if type != 0:
+                continue
 
-        blocks = [block.replace("\n", "") for block in blocks]
+            text = text.replace("\n", "")
+            re.sub("^•", "• ", text)
 
-        # format the bulletins
-        blocks = [re.sub("•", "\n• ", block) for block in blocks]
+            block=Block(
+                text=text,
+                x0=x0/page_w,
+                y0=y0/page_h,
+                x1=x1/page_w,
+                y1=y1/page_h,
+                page=page_idx+1,
+            )
 
-        if len(blocks) > 0:
-            result.extend(blocks)
+            ret.append(block)
 
-    return result
+    return ret
 
 
-mode: Union["diff", "show"] = "show"
+def is_paragraph(block: Block, min_lowercase_coef=0.5, paragraph_min_words=30) -> bool:
+    return len(block.text.split(" ")) > paragraph_min_words and lowercase_coef(block.text) > min_lowercase_coef
 
-if __name__ == "__main__" and mode == "show":
+if __name__ == "__main__":
     len_all = 0
 
     for file in os.listdir(PDF_SOURCE_DIR):
         filename = os.path.join(PDF_SOURCE_DIR, file)
-        paragraphs = get_paragraphs(filename)
-        print(*paragraphs, sep="\n\n")
+        paragraphs = [block for block in get_blocks(filename) if is_paragraph(block)]
+        # print(*paragraphs, sep="\n\n")
         len_all += len(paragraphs)
 
     print("all are", len_all)
-
-if __name__ == "__main__" and mode == "diff":
-    len_all = 0
-
-    for file in os.listdir(PDF_SOURCE_DIR):
-        filename = os.path.join(PDF_SOURCE_DIR, file)
-        paragraphs_low = get_paragraphs(filename, min_lowercase_coef=0.50)
-        paragraphs_high = get_paragraphs(filename, min_lowercase_coef=0.75)
-
-        paragraphs = list(set(paragraphs_low) - set(paragraphs_high))
-
-        print(*paragraphs, sep="\n\n")
-        len_all += len(paragraphs)
-
-    print(len_all, "more")
