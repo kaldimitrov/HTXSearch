@@ -45,6 +45,7 @@ export default function InputFile(props: { theme: string }) {
         startIcon={<CloudUploadIcon />}
         color="secondary"
         sx={{
+          height: 1,
           backgroundColor: "#FFAE00",
           borderRadius: 3,
           borderShadow: 3,

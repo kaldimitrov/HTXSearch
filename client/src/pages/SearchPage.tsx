@@ -1,14 +1,14 @@
 import React from "react";
-import SearchBar from "./components/SearchBar";
-import "./App.css";
+import SearchBar from "../components/SearchBar";
+import "../styles/SearchPage.css";
 import { ThemeProvider, createTheme, useTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { Box, IconButton } from "@mui/material";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { grey } from "@mui/material/colors";
-import SuggestionCard from "./components/SuggestionCard";
-import InputField from "./components/InputField";
+import SuggestionCard from "../components/SuggestionCard";
+import InputField from "../components/InputField";
 
 const ColorModeContext = React.createContext({ toggleColorMode: () => {} });
 
@@ -51,7 +51,7 @@ function SwitchTheme() {
   );
 }
 
-function App() {
+export default function SearchPage() {
   const [mode, setMode] = React.useState<"light" | "dark">(
     (localStorage.getItem("theme") as "light" | "dark") || "dark"
   );
@@ -112,35 +112,16 @@ function App() {
             <InputField theme={mode} />
             <SwitchTheme />
           </div>
-          <div className="text">
-            <h1>HTXSearch</h1>
-          </div>
           <div className="main">
             <div className="search-bar">
               <SearchBar input={input} updateValue={updateValue} />
             </div>
-            <div className="cards">
-              <SuggestionCard
-                text="R0 register ESP32"
-                updateValue={updateValue}
-                theme={mode}
-              />
-              <SuggestionCard
-                text="STM32 information"
-                updateValue={updateValue}
-                theme={mode}
-              />
-              <SuggestionCard
-                text="Timers in esp32"
-                updateValue={updateValue}
-                theme={mode}
-              />
+            <div className="results">
+              <i>Results for input: {input}</i>
             </div>
           </div>
         </div>
       </ThemeProvider>
     </ColorModeContext.Provider>
-  );
+  )
 }
-
-export default App;
