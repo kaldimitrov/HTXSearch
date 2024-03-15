@@ -4,6 +4,7 @@ from sentence_transformers import SentenceTransformer, util
 from pathlib import Path
 import re
 import numpy as np
+from tqdm import tqdm
 
 from pdf import get_sections, PDF_SOURCE_DIR, Section
 
@@ -34,20 +35,15 @@ def split_sentences(text: str) -> [str]:
 
 
 def vectorize_sections(sections: [Section]) -> Tuple[np.ndarray, np.ndarray]:
-    # sections = sections[:40]
+    encodings = []
 
-    sentences = []
-    section_idxs = []
-
-    for i, it in enumerate(sections):
+    for i, it in enumerate(tqdm(sections)):
         it_sentences = sum([split_sentences(jt.text) for jt in it.body], start=[])
+        if not it_sentences:
+            it_sentences = ["AAAAAAAAAAAAAAAA"]
+        encodings.append(np.mean(model.encode(it_sentences), axis=0))
 
-        sentences.extend(it_sentences)
-        section_idxs.extend([i] * len(it_sentences))
-
-    encodings = model.encode(sentences)
-
-    return encodings, np.array(section_idxs)
+    return np.array(encodings)
 
 
 if __name__ == '__main__':
@@ -55,18 +51,14 @@ if __name__ == '__main__':
 
     sections = np.array(get_sections(file))
 
-    encodings, section_idx = vectorize_sections(sections)
+    encodings = vectorize_sections(sections)
 
     while True:
-        question = input("Question: ")
+        question = input(f"[{file.stem}] Question: ")
         question_enc = model.encode(question)
 
         similarity = util.cos_sim(encodings, question_enc).numpy().squeeze(axis=1)
 
         top = np.flip(np.argsort(similarity))[0]
 
-        print(similarity[top], sections[section_idx[top]])
-
-    print(encodings.shape, len(section_idx))
-
-#util.cos_sim
+        print(similarity[top], sections[top])
