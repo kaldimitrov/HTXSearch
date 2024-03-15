@@ -30,6 +30,20 @@ class Block:
     page: int
 
 
+# NOTE: returns None if the ToC does not exist
+def get_toc(pdf_name: str) -> set[str]:
+    doc = fitz.open(pdf_name)
+    toc = doc.get_toc()
+
+    if len(toc) == 0:
+        return None
+
+    res = set()
+    for el in toc:
+        res.add(el[1])
+    return res
+
+
 def get_blocks(pdf_name: str) -> [Block]:
     doc = fitz.open(pdf_name)
 
@@ -67,7 +81,7 @@ def get_blocks(pdf_name: str) -> [Block]:
     return ret
 
 
-def is_paragraph(block: Block, min_lowercase_coef=0.5) -> bool:
+def is_paragraph(block: Block, toc: set[str], min_lowercase_coef=0.5) -> bool:
     if block.y0 < 0.1 or block.y1 > 0.9:
         return False
     if contents_entry.match(block.text):
@@ -76,6 +90,10 @@ def is_paragraph(block: Block, min_lowercase_coef=0.5) -> bool:
         return False
     if len(block.text.split()) < 2:
         return False
+
+    if toc is not None:
+        return lowercase_coef(block.text) > min_lowercase_coef or block.text in toc
+
     return lowercase_coef(block.text) > min_lowercase_coef or section_title.match(
         block.text
     )
@@ -110,25 +128,43 @@ def is_version_successor(prev: Tuple[str], next: Tuple[str]) -> bool:
     return True
 
 
-# the paragrpahs should be filtered externaly
-def get_sections(paragraphs: [Block]) -> [Section]:
+# a fallback checker if no table of contents are provided
+def is_toc_fallback(paragraph: Block, version: tuple[str]) -> bool:
+    next_version = section_version.match(paragraph.text)
+
+    if next_version is not None:
+        next_version = next_version[1].split(".")
+
+    if next_version is None or not is_version_successor(version, next_version):
+        return False
+
+    return True
+
+
+def get_sections(pdf_name: str) -> [Section]:
+    blocks = get_blocks(pdf_name)
+    toc = get_toc(pdf_name)
+
+    paragraphs = [b for b in blocks if is_paragraph(b, toc)]
+
     ret = []
     version = ("1",)
 
     for paragraph in paragraphs:
-        next_version = section_version.match(paragraph.text)
+        if toc is not None:
+            if paragraph.text in toc:
+                ret.append(Section(title=paragraph, body=[]))
+                continue
 
-        if next_version is not None:
-            next_version = next_version[1].split(".")
-
-        if next_version is None or not is_version_successor(version, next_version):
             if ret:
                 ret[-1].body.append(paragraph)
+
+        # if no Table of Contents is provided
+        if is_toc_fallback(paragraph, version):
+            ret.append(Section(title=paragraph, body=[]))
             continue
-
-        version = next_version
-
-        ret.append(Section(title=paragraph, body=[]))
+        if ret:
+            ret[-1].body.append(paragraph)
 
     ret = [r for r in ret if r.body]
 
@@ -139,12 +175,7 @@ if __name__ == "__main__":
     len_all = 0
 
     for file in Path(PDF_SOURCE_DIR).iterdir():
-        sections = get_sections(
-            [
-                block
-                for block in get_blocks(file)
-                if is_paragraph(block) and block.page > 1
-            ]
-        )
+        sections = get_sections(file)
         len_all += len(sections)
+        print(*sections, sep="\n\n")
     print(f"Loaded {len_all} sections")
