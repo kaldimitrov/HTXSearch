@@ -4,7 +4,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from typing import Tuple
+from pypdf import PdfReader, PdfWriter
+from typing import Tuple, Set
 
 PDF_SOURCE_DIR = "./examples/"
 
@@ -30,7 +31,7 @@ class Block:
 
 
 # NOTE: returns None if the ToC does not exist
-def get_toc(pdf_name: str) -> set[str]:
+def get_toc(pdf_name: str) -> Set[str]:
     doc = fitz.open(pdf_name)
     toc = doc.get_toc()
 
@@ -80,7 +81,7 @@ def get_blocks(pdf_name: str) -> [Block]:
     return ret
 
 
-def is_paragraph(block: Block, toc: set[str], min_lowercase_coef=0.5) -> bool:
+def is_paragraph(block: Block, toc: Set[str], min_lowercase_coef=0.5) -> bool:
     if block.y0 < 0.1 or block.y1 > 0.9:
         return False
     if contents_entry.match(block.text):
@@ -126,6 +127,29 @@ def get_sections(pdf_name: str) -> [Section]:
 
     return ret
 
+def get_images(file):
+
+    reader = PdfReader(file)  
+
+    doc = fitz.open(file)
+    toc = doc.get_toc()
+    if len(toc) == 0:
+        return None
+    for i in range(len(toc) - 1):
+        if "Table" in toc[i][1]:
+            output = PdfWriter()
+            output.add_page(reader.pages[int(toc[i][2]) - 1])
+            os.makedirs((str(file).split(".")[0]).split("/")[1], exist_ok=True)
+            with open((str(file).split(".")[0]).split("/")[1] + "/" + (str(file).split(".")[0]).split("/")[1] + "%s_tables " % str(toc[i][2]) + str(toc[i][1]).split(" ")[1] + ".pdf", "wb") as outputStream:
+                output.write(outputStream)
+                
+        if "Figure" in toc[i][1]:
+            output = PdfWriter()
+            output.add_page(reader.pages[int(toc[i][2]) - 1])
+            os.makedirs((str(file).split(".")[0]).split("/")[1], exist_ok=True)
+            with open((str(file).split(".")[0]).split("/")[1] + "/" + (str(file).split(".")[0]).split("/")[1] + "%s_figures " % str(toc[i][2]) + str(toc[i][1]).split(" ")[1] + ".pdf", "wb") as outputStream:
+                output.write(outputStream)
+    
 
 if __name__ == "__main__":
     len_all = 0
@@ -133,7 +157,7 @@ if __name__ == "__main__":
     for file in Path(PDF_SOURCE_DIR).iterdir():
         sections = get_sections(file)
         len_all += len(sections)
-
+        get_images(file)
         print(f"\nFile: {file}; sections: {len(sections)}")
         print(*[it.title.text for it in sections], sep="\n")
     print(f"Loaded {len_all} sections")
