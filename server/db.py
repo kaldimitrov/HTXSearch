@@ -12,7 +12,7 @@ from vectorization import vectorize_sections
 DB_PATH = "./chroma"
 CHROMA_COLLECTION = "htx-search"
 SENTENCE_MODEL = "multi-qa-MiniLM-L6-cos-v1"
-DISTANCE_THRESHOLD = 1.0
+DISTANCE_THRESHOLD = 0.9
 
 N_RESULTS = 3
 
@@ -44,18 +44,21 @@ class ChromaDbInstance:
 
     def __populate__(self) -> None:
         for file in Path(PDF_SOURCE_DIR).iterdir():
-            sections = get_sections(file)
-            bodies = [get_body(s) for s in sections]
-            meta = [{"title": s.title.text, "file": file.name} for s in sections]
+            self.vectorize(file)
 
-            ids = [str(idx + self.id_counter) for idx, _ in enumerate(bodies)]
-            self.id_counter += len(sections)
+    def vectorize(self, file: Path) -> None:
+        sections = get_sections(file)
+        bodies = [s.get_unified_body() for s in sections]
+        meta = [{"title": s.title.text, "file": file.stem} for s in sections]
 
-            embeddings = vectorize_sections(sections, file, self.embed_fn._model)
+        ids = [str(idx + self.id_counter) for idx, _ in enumerate(bodies)]
+        self.id_counter += len(sections)
 
-            self.collection.add(
-                documents=bodies, embeddings=embeddings, metadatas=meta, ids=ids
-            )
+        embeddings = vectorize_sections(sections, file, self.embed_fn._model)
+
+        self.collection.add(
+            documents=bodies, embeddings=embeddings, metadatas=meta, ids=ids
+        )
 
     def query(self, query: str) -> dict[str]:
         response = self.collection.query(query_texts=query, n_results=N_RESULTS)
@@ -76,13 +79,6 @@ class ChromaDbInstance:
             result["count"] += 1
 
         return result
-
-
-def get_body(s: Section) -> str:
-    res = ""
-    for b in s.body:
-        res += b.text + "\n"
-    return res
 
 
 def fmt_answers(db_resp) -> None:

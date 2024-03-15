@@ -65,8 +65,6 @@ def get_blocks(pdf_name: str) -> [Block]:
 
             text = re.sub(r"\s+", " ", text).strip()
             text = re.sub("^•", "\n• ", text)
-            # sometimes the section versions are together like: '3.1.CPU ...'
-            # text = re.sub(r"(\d\.?)([A-Za-z])", r"\1 \2", text)
 
             block = Block(
                 text=text,
@@ -107,6 +105,12 @@ class Section:
         body_text = "\n".join(it.text for it in self.body)
         return f"{self.title.text}\n{body_text}\n\n"
 
+    def get_unified_body(self) -> str:
+        res = ""
+        for b in self.body:
+            res += b.text + "\n"
+        return res
+
 
 def get_sections(pdf_name: str) -> [Section]:
     blocks = get_blocks(pdf_name)
@@ -128,35 +132,6 @@ def get_sections(pdf_name: str) -> [Section]:
 
     return ret
 
-
-# def get_images(pdf_name: str) -> None:
-#     file = Path(pdf_name)
-#
-#     name = file.stem
-#
-#     (Path(PDF_IMG_OUT_DIR).joinpath(name)).mkdir(parents=True, exist_ok=True)
-#
-#     reader = PdfReader(file)
-#     toc = fitz.open(file).get_toc()
-#
-#     # [<idx>, "entry name", <page>]
-#     for entry in toc:
-#
-#         output = PdfWriter()
-#         output.add_page(reader.pages[entry[2] - 1])
-#
-#         # os.makedirs((str(file).split(".")[0]).split("/")[1], exist_ok=True)
-#
-#         with open(
-#             (str(file).split(".")[0]).split("/")[1]
-#             + "/"
-#             + (str(file).split(".")[0]).split("/")[1]
-#             + "%s_tables " % str(toc[i][2])
-#             + str(toc[i][1]).split(" ")[1]
-#             + ".pdf",
-#             "wb",
-#         ) as outputStream:
-#             output.write(outputStream)
 
 if __name__ == "__main__":
     len_all = 0

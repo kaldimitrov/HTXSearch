@@ -57,7 +57,11 @@ def upload_file():
 
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+
+        file_path = Path(app.config["UPLOAD_FOLDER"]).joinpath(filename)
+        file.save(str(file_path))
+        app.chroma.vectorize(file_path)
+        # file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
         return {"response": f'File "{filename}" uploaded successfully'}
     else:
         return {"error": "File extension not allowed. Please upload a PDF file."}, 400
