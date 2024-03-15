@@ -1,7 +1,9 @@
+import { CardActions } from "@mui/material";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
+import DrawIcon from "@mui/icons-material/Draw";
 
 function getWindowDimensions() {
   const { innerWidth: width, innerHeight: height } = window;
@@ -45,6 +47,15 @@ export default function SuggestionCard(props: {
             {props.text}
           </Typography>
         </CardContent>
+        <CardActions
+          sx={{
+            display: "flex",
+            alignItems: "start",
+            justifyContent: "end",
+          }}
+        >
+          <DrawIcon sx={{ height: "1.5rem", width: "1.5rem" }} />
+        </CardActions>
       </Card>
     </>
   );

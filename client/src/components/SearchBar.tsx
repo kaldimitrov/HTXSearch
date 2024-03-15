@@ -2,6 +2,7 @@ import Paper from "@mui/material/Paper";
 import SearchIcon from "@mui/icons-material/Search";
 import InputBase from "@mui/material/InputBase";
 import IconButton from "@mui/material/IconButton";
+import { fetchInformation } from "../services/Requests";
 
 export default function SearchBar(props: { updateValue: any; input: string }) {
   return (
@@ -25,7 +26,14 @@ export default function SearchBar(props: { updateValue: any; input: string }) {
           }}
           inputProps={{ "aria-label": "search" }}
         />
-        <IconButton type="button" sx={{ p: "10px" }} aria-label="search">
+        <IconButton
+          type="button"
+          sx={{ p: "10px" }}
+          aria-label="search"
+          onClick={async () => {
+            await fetchInformation(props.input);
+          }}
+        >
           <SearchIcon />
         </IconButton>
       </Paper>
