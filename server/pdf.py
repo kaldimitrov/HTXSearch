@@ -9,8 +9,7 @@ from typing import Tuple
 PDF_SOURCE_DIR = "./examples/"
 
 contents_entry = re.compile(r"^\d.*\d$")
-section_title = re.compile(r"^[1-9][0-9]*(\.(\d|[a-z])+)*\.? ")
-section_version = re.compile(r"^([1-9][0-9]*(\.(\d|[a-z])+)*)\.? ")
+toc_section = re.compile(r"^\d+(\.\d+)* .*")
 non_bulletin_dot = re.compile(r"[^\n]+•.*")
 
 
@@ -94,9 +93,7 @@ def is_paragraph(block: Block, toc: set[str], min_lowercase_coef=0.5) -> bool:
     if toc is not None:
         return lowercase_coef(block.text) > min_lowercase_coef or block.text in toc
 
-    return lowercase_coef(block.text) > min_lowercase_coef or section_title.match(
-        block.text
-    )
+    return lowercase_coef(block.text) > min_lowercase_coef
 
 
 @dataclass
@@ -116,10 +113,9 @@ def get_sections(pdf_name: str) -> [Section]:
     paragraphs = [b for b in blocks if is_paragraph(b, toc)]
 
     ret = []
-    version = ("1",)
 
     for paragraph in paragraphs:
-        if paragraph.text in toc:
+        if paragraph.text in toc and toc_section.match(paragraph.text):
             ret.append(Section(title=paragraph, body=[]))
             continue
 
@@ -137,7 +133,6 @@ if __name__ == "__main__":
     for file in Path(PDF_SOURCE_DIR).iterdir():
         sections = get_sections(file)
         len_all += len(sections)
-        # print(*sections, sep="\n\n")
 
         print(*[it.title.text for it in sections], sep="\n")
     print(f"Loaded {len_all} sections")
