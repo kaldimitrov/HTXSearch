@@ -2,8 +2,16 @@ import fitz
 import re
 import os
 from dataclasses import dataclass
+from pathlib import Path
+
+from typing import Tuple
 
 PDF_SOURCE_DIR = "./examples/"
+
+contents_entry = re.compile(r"^\d.*\d$")
+section_title = re.compile(r"^\d(\.(\d|[a-z])+)* ")
+section_title_version = re.compile(r"^(\d+(\.(\d|[a-z])+)*) ")
+non_bulletin_dot = re.compile(r"[^\n]+•.*")
 
 
 # the coefficient between lowercase characters and the total characters
@@ -39,7 +47,7 @@ def get_blocks(pdf_name: str) -> [Block]:
                 continue
 
             text = text.replace("\n", "")
-            re.sub("^•", "• ", text)
+            re.sub("^•", "\n• ", text)
 
             block=Block(
                 text=text,
@@ -55,16 +63,75 @@ def get_blocks(pdf_name: str) -> [Block]:
     return ret
 
 
-def is_paragraph(block: Block, min_lowercase_coef=0.5, paragraph_min_words=30) -> bool:
-    return len(block.text.split(" ")) > paragraph_min_words and lowercase_coef(block.text) > min_lowercase_coef
+def is_paragraph(block: Block, min_lowercase_coef=0.5) -> bool:
+    if block.y0 < 0.1 or block.y1 > 0.9: return False
+    if contents_entry.match(block.text): return False
+    if non_bulletin_dot.match(block.text): return False
+    if len(block.text.split()) < 3: return False
+    return lowercase_coef(block.text) > min_lowercase_coef or section_title.match(block.text)
+
+
+@dataclass
+class Section:
+    title: Block
+    body: [Block]
+
+    def __repr__(self) -> str:
+        body_text = '\n'.join(it.text for it in self.body)
+        return f"{self.title.text}\n{body_text}\n\n"
+
+
+def is_version_successor(prev: Tuple[str], next: Tuple[str]) -> bool:
+    for p, n in zip(prev, next):
+        diff = None
+
+        if p.isalpha() and n.isalpha():
+            diff = ord(n) - ord(p)
+
+        if p.isdigit() and n.isdigit():
+            diff = int(n) - int(p)
+
+        if diff is None:
+            return False
+
+        if diff < -1 or diff > 2:
+            return False
+
+    return True
+
+
+# the paragrpahs should be filtered externaly
+def get_sections(paragraphs: [Block]) -> [Section]:
+    ret = []
+    version = "1",
+
+    for paragraph in paragraphs:
+        next_version = section_title_version.match(paragraph.text)
+
+        if next_version is not None:
+            next_version = next_version[1].split(".")
+
+        if next_version is None or not is_version_successor(version, next_version):
+            if ret:
+                ret[-1].body.append(paragraph)
+            continue
+
+        version = next_version
+
+        ret.append(Section(title=paragraph, body=[]))
+
+    return ret
+
 
 if __name__ == "__main__":
     len_all = 0
 
-    for file in os.listdir(PDF_SOURCE_DIR):
-        filename = os.path.join(PDF_SOURCE_DIR, file)
-        paragraphs = [block for block in get_blocks(filename) if is_paragraph(block)]
-        # print(*paragraphs, sep="\n\n")
-        len_all += len(paragraphs)
+    for file in Path(PDF_SOURCE_DIR).iterdir():
+        print(f"\nFile: {file}")
 
-    print("all are", len_all)
+        sections = get_sections([block for block in get_blocks(file) if is_paragraph(block) and block.page > 1])
+        # print(*sections, sep="\n\n")
+        print("FIRST: ", sections[0])
+        len_all += len(sections)
+
+    print(len_all)
