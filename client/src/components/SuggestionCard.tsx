@@ -1,17 +1,30 @@
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
+import { useState } from "react";
+
+function getWindowDimensions() {
+  const { innerWidth: width, innerHeight: height } = window;
+  return {
+    width,
+    height,
+  };
+}
 
 export default function SuggestionCard(props: {
   text: string;
   updateValue: Function;
   theme: string;
 }) {
+  const [windowDimensions, setWindowDimensions] = useState(
+    getWindowDimensions()
+  );
   return (
     <>
       <Card
         sx={{
-          width: 0.98 / 3,
+          width: windowDimensions.width > 1024 ? 0.98 / 3 : 1,
+          minWidth: "16rem",
           height: 1 / 4,
           cursor: "pointer",
           borderRadius: 3,
