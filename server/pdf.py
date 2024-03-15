@@ -159,6 +159,10 @@ def get_figures(file: str) -> Dict[str, Block]:
     return figure_map
 
 
+def render_page(file: str, page: int) -> bytes:
+    return fitz.open(file).load_page(int(page)-1).get_pixmap().tobytes()
+
+
 if __name__ == "__main__":
     for file in Path(PDF_SOURCE_DIR).iterdir():
         pprint(get_figures(file))

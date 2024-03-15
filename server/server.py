@@ -1,6 +1,6 @@
 from werkzeug.utils import secure_filename
 
-from flask import Flask, request
+from flask import Flask, request, Response
 from flask_cors import CORS
 
 import numpy as np
@@ -12,7 +12,7 @@ import json
 import os
 from pathlib import Path
 
-from pdf import get_sections, PDF_SOURCE_DIR
+from pdf import get_sections, PDF_SOURCE_DIR, render_page
 from sentence_transformers import util
 from db import ChromaDbInstance
 
@@ -43,6 +43,14 @@ def submit():
     result = app.chroma.query(query)
 
     return {"response": result}
+
+
+@app.route("/pages/<file>/<page>", methods=["GET"])
+def get_page(file, page):
+    if request.method != "GET":
+        return
+
+    return Response(render_page(Path(PDF_SOURCE_DIR)/file, page), mimetype='image/png')
 
 
 @app.route("/upload", methods=["POST"])
