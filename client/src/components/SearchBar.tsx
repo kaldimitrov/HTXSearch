@@ -21,6 +21,12 @@ export default function SearchBar(props: { updateValue: any; input: string }) {
           sx={{ ml: 1, flex: 1, padding: 1 }}
           placeholder="Search"
           value={props.input}
+          onKeyDown={async (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              await fetchInformation(props.input);
+            }
+          }}
           onInput={(e: any) => {
             props.updateValue(e.target.data);
           }}

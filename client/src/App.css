@@ -47,6 +47,7 @@
 }
 
 .cards > * {
+    margin-top: 1rem;
     flex: 1 !important;
 }
 
