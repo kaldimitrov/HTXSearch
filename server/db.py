@@ -12,6 +12,8 @@ from vectorization import vectorize_sections
 DB_PATH = "./chroma"
 CHROMA_COLLECTION = "htx-search"
 SENTENCE_MODEL = "multi-qa-MiniLM-L6-cos-v1"
+DISTANCE_THRESHOLD = 1.0
+
 N_RESULTS = 3
 
 
@@ -44,7 +46,7 @@ class ChromaDbInstance:
         for file in Path(PDF_SOURCE_DIR).iterdir():
             sections = get_sections(file)
             bodies = [get_body(s) for s in sections]
-            meta = [{"title": s.title.text, "file": str(file)} for s in sections]
+            meta = [{"title": s.title.text, "file": file.name} for s in sections]
 
             ids = [str(idx + self.id_counter) for idx, _ in enumerate(bodies)]
             self.id_counter += len(sections)
@@ -56,8 +58,24 @@ class ChromaDbInstance:
             )
 
     def query(self, query: str) -> dict[str]:
-        print(f"QUERY: {query}")
-        return self.collection.query(query_texts=query, n_results=N_RESULTS)
+        response = self.collection.query(query_texts=query, n_results=N_RESULTS)
+
+        result = {"count": 0, "distances": [], "metadatas": [], "documents": []}
+        for i in range(N_RESULTS):
+            if response["distances"][0][i] > DISTANCE_THRESHOLD:
+                continue
+
+            result["distances"].append(response["distances"][0][i])
+            result["metadatas"].append(
+                {
+                    "title": response["metadatas"][0][i]["title"],
+                    "file": response["metadatas"][0][i]["file"],
+                }
+            )
+            result["documents"].append(response["documents"][0][i])
+            result["count"] += 1
+
+        return result
 
 
 def get_body(s: Section) -> str:
@@ -68,11 +86,11 @@ def get_body(s: Section) -> str:
 
 
 def fmt_answers(db_resp) -> None:
-    for i in range(N_RESULTS):
-        distance = db_resp["distances"][0][i]
-        title = db_resp["metadatas"][0][i]["title"]
-        body = db_resp["documents"][0][i]
-        file = db_resp["metadatas"][0][i]["file"]
+    for i in range(db_resp["count"]):
+        distance = db_resp["distances"][i]
+        title = db_resp["metadatas"][i]["title"]
+        body = db_resp["documents"][i]
+        file = db_resp["metadatas"][i]["file"]
         print(f"[{distance}] {title}\n")
         print(f"{body}")
         print(f"Source: {file}\n")
