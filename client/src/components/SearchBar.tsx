@@ -2,9 +2,10 @@ import Paper from "@mui/material/Paper";
 import SearchIcon from "@mui/icons-material/Search";
 import InputBase from "@mui/material/InputBase";
 import IconButton from "@mui/material/IconButton";
-import { fetchInformation } from "../services/Requests";
+import { useNavigate } from "react-router-dom";
 
 export default function SearchBar(props: { updateValue: any; input: string }) {
+  const navigate = useNavigate();
   return (
     <>
       <Paper
@@ -24,7 +25,7 @@ export default function SearchBar(props: { updateValue: any; input: string }) {
           onKeyDown={async (e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              await fetchInformation(props.input);
+              navigate(`/search?query=${props.input}`);
             }
           }}
           onInput={(e: any) => {
@@ -37,7 +38,7 @@ export default function SearchBar(props: { updateValue: any; input: string }) {
           sx={{ p: "10px" }}
           aria-label="search"
           onClick={async () => {
-            await fetchInformation(props.input);
+            navigate(`/search?query=${props.input}`);
           }}
         >
           <SearchIcon />

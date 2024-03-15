@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import "../styles/search.css";
 import { ThemeProvider, createTheme, useTheme } from "@mui/material/styles";
@@ -8,6 +8,8 @@ import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { grey } from "@mui/material/colors";
 import InputField from "../components/InputField";
+import { fetchInformation } from "../services/Requests";
+import { useLocation } from "react-router-dom";
 
 const ColorModeContext = React.createContext({ toggleColorMode: () => {} });
 
@@ -51,7 +53,7 @@ function SwitchTheme() {
 }
 
 function Search() {
-  const [mode, setMode] = React.useState<"light" | "dark">(
+  const [mode, setMode] = useState<"light" | "dark">(
     (localStorage.getItem("theme") as "light" | "dark") || "dark"
   );
   const colorMode = React.useMemo(
@@ -61,14 +63,22 @@ function Search() {
         setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
       },
     }),
-    []
+    [mode]
   );
-
-  const [input, setInput] = React.useState("");
+  const [input, setInput] = useState("");
+  const location = useLocation();
 
   function updateValue(e: string) {
     setInput(e);
   }
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryValue = urlParams.get("query");
+
+    setInput(queryValue || "");
+    fetchInformation(queryValue as string);
+  }, [location]);
 
   const theme = React.useMemo(
     () =>
@@ -112,7 +122,9 @@ function Search() {
               <InputField theme={mode} />
             </div>
             <div className="title">
-              <p className="text">HTXSearch</p>
+              <a className="text" href="/">
+                HTXSearch
+              </a>
             </div>
             <div className="theme">
               <SwitchTheme />
