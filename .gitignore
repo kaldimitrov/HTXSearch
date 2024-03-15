@@ -2,6 +2,7 @@ venv/
 chroma/
 __pycache__/
 uploads/
+build/
 
 # Logs
 logs
