@@ -57,4 +57,8 @@
       width: 100%;
       padding: 1rem;
     }
+
+    .title {
+        margin-left: 10%;
+    }
 }

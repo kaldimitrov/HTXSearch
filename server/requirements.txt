@@ -6,3 +6,4 @@ chromadb
 sentence-transformers
 flask-cors
 numpy
+pypdf
