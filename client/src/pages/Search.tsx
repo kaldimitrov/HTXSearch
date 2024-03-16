@@ -10,6 +10,7 @@ import { grey } from "@mui/material/colors";
 import InputField from "../components/InputField";
 import { fetchInformation } from "../services/Requests";
 import { useLocation } from "react-router-dom";
+import { environment } from "../environment/environment";
 
 const ColorModeContext = React.createContext({ toggleColorMode: () => {} });
 
@@ -67,6 +68,7 @@ function Search() {
   );
   const [input, setInput] = useState("");
   const location = useLocation();
+  const [output, setOutput] = useState([] as any);
 
   function updateValue(e: string) {
     setInput(e);
@@ -77,7 +79,13 @@ function Search() {
     const queryValue = urlParams.get("query");
 
     setInput(queryValue || "");
-    fetchInformation(queryValue as string);
+    let newOutput: any[] = [];
+    fetchInformation(queryValue as string).then((res) => {
+      for (let i = 0;i < res?.response.count; i++) {
+        newOutput.push(mapParagraph(res?.response.metadatas[i].title, res?.response.documents[i], res?.response.metadatas[i].file));
+      }
+      setOutput(newOutput);
+    });
   }, [location]);
 
   const theme = React.useMemo(
@@ -111,6 +119,50 @@ function Search() {
     [mode]
   );
 
+  function mapParagraph(title: string, paragraphData: [{page?: number, text: string}], reference: string) {
+    return (
+      <>
+        <div className="title-data">
+          <h2 key="title">
+            {title}
+          </h2>
+        </div>
+        <div className="paragraph-data">
+          <p key="paragraph">
+            {paragraphData.map((par: { page?: number; text: string }, index: number) => (
+              <React.Fragment key={`paragraph_${index}`}>
+                {par.page ? (
+                  <a href={`${environment.serverUrl}/page/${reference}/${par.page}`}>
+                    {par.text.split('\n').map((line, idx) => (
+                      <React.Fragment key={idx}>
+                        {line}
+                        {idx < par.text.split('\n').length - 1 && <br />}
+                      </React.Fragment>
+                    ))}
+                  </a>
+                ) : (
+                  <span>
+                    {par.text.split('\n').map((line, idx) => (
+                      <React.Fragment key={idx}>
+                        {line}
+                        {idx < par.text.split('\n').length - 1 && <br />}
+                      </React.Fragment>
+                    ))}
+                  </span>
+                )}
+              </React.Fragment>
+            ))}
+          </p>
+        </div>
+        <div className="reference-data">
+          <i key="reference">
+            {reference}
+          </i>
+        </div>
+      </>
+    )
+  }
+
   return (
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
@@ -134,6 +186,9 @@ function Search() {
             <div className="search-bar">
               <SearchBar input={input} updateValue={updateValue} />
             </div>
+          </div>
+          <div className="mapped-data">
+            {output}
           </div>
         </div>
       </ThemeProvider>

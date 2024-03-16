@@ -35,7 +35,7 @@ class ChromaDbInstance:
         self.file_figure_map = {}
 
         for file in Path(PDF_SOURCE_DIR).iterdir():
-            self.file_figure_map[file.name] = {k: v.page for k, v in get_figures(file).items()}
+            self.file_figure_map[file.stem] = {k: v.page for k, v in get_figures(file).items()}
 
 
         try:
@@ -92,14 +92,12 @@ class ChromaDbInstance:
             while (match := figure_reference.search(result["documents"][-1][-1]["text"])) is not None:
                 text = match[1]
 
-                if text not in self.file_figure_map[response["metadatas"][0][i]["file"]]:
-                    continue
+                page = self.file_figure_map[response["metadatas"][0][i]["file"]].get(text)
 
                 old_text = result["documents"][-1][-1]["text"]
                 result["documents"][-1].pop()
 
                 l, r = match.span(1)
-                page = self.file_figure_map[response["metadatas"][0][i]["file"]][text]
 
                 result["documents"][-1].append({"page": None, "text": old_text[:l]})
                 result["documents"][-1].append({"page": page, "text": old_text[l:r]})

@@ -3,14 +3,14 @@ import { environment } from "../environment/environment";
 
 export async function fetchInformation(
   input: string
-): Promise<string | undefined> {
+): Promise<any> {
   if (!input) return;
 
   try {
     const response = await axios.post(`${environment.serverUrl}/submit`, {
       query: input,
     });
-    return response.data;
+    return response.data
   } catch (error) {
     console.error("Error submitting query:", error);
   }

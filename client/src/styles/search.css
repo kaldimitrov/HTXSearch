@@ -3,7 +3,7 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    width: 100vw;
+    width: auto;
     flex-direction: column;
     margin: auto;
 }
@@ -27,7 +27,7 @@
 }
 
 .main {
-    height: 90%;
+    height: 10%;
     width: 50%;
     text-align: center;
 }
@@ -51,6 +51,28 @@
 .search-bar {
     margin-bottom: 1rem;
 }
+
+.mapped-data {
+    height: 80%;
+    width: 100%;
+    flex: 1;
+    padding: 2rem;
+    text-align: left;
+    justify-content: start; 
+
+    .title-data {
+        width: 50%;
+    }
+
+    .paragraph-data {
+        width: 50%;
+    }
+
+    .reference-data {
+        width: 50%;
+    }
+}
+
 
 @media only screen and (max-width: 1024px) {
     .main {
