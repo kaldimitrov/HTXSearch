@@ -14,7 +14,7 @@ from vectorization import vectorize_sections
 DB_PATH = "./chroma"
 CHROMA_COLLECTION = "htx-search"
 SENTENCE_MODEL = "multi-qa-MiniLM-L6-cos-v1"
-DISTANCE_THRESHOLD = 0.9
+DISTANCE_THRESHOLD = 1.0
 
 N_RESULTS = 3
 

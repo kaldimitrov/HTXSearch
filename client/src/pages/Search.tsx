@@ -132,7 +132,7 @@ function Search() {
             {paragraphData.map((par: { page?: number; text: string }, index: number) => (
               <React.Fragment key={`paragraph_${index}`}>
                 {par.page ? (
-                  <a href={`${environment.serverUrl}/page/${reference}/${par.page}`}>
+                  <a href={`${environment.serverUrl}/pages/${reference.replace(/\.pdf$/, '')}.pdf/${par.page}`}>
                     {par.text.split('\n').map((line, idx) => (
                       <React.Fragment key={idx}>
                         {line}
